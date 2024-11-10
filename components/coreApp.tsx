@@ -1627,7 +1627,7 @@ export default function CoreApp() {
 
       {/* Bottom Navigation - Fixed at bottom, above content */}
       <div className="fixed bottom-0 left-0 right-0 bg-[#F5F1E0] p-2 z-20">
-        <div className="flex justify-between px-12">
+        <div className="flex justify-between px-12 pb-6">
           <motion.div
             className="flex flex-col items-center gap-2 cursor-pointer"
             onClick={() => setActiveTab("chat")}

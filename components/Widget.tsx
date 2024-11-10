@@ -7,10 +7,12 @@ export default function Widget({
   taskType,
   isCelebrating,
   purchasedItems,
+  stretchStage,
 }: {
   taskType: string | null;
   isCelebrating: boolean;
   purchasedItems: string[];
+  stretchStage?: string;
 }) {
   if (!purchasedItems) return null;
   const determineImage = () => {
@@ -24,6 +26,9 @@ export default function Widget({
       return "/character/laundry.gif";
     }
     if (taskType === "EXCERCISE") {
+      if (stretchStage === "LEFT") return "/character/stretcha.gif";
+      if (stretchStage === "RIGHT") return "/character/stretchb.gif";
+      if (stretchStage === "FORWARD") return "/character/stretchc.gif";
       return "/character/excercise.gif";
     }
     if (taskType === "COOK") {
@@ -49,7 +54,7 @@ export default function Widget({
         <img
           src={determineImage()}
           alt="Centered Image"
-          className="w-[128px] mt-32 z-50"
+          className="w-[164px] mt-[80px] z-50"
         />
       </motion.div>
       {/* Room Background */}

@@ -47,6 +47,7 @@ interface GoalExpandedProps {
   onMarkDone: () => void;
   onMarkNotDone: () => void;
   onFinish: () => void;
+  setStretchStage: React.Dispatch<React.SetStateAction<string>>;
 }
 
 interface CelebrationModalProps {
@@ -142,6 +143,7 @@ export function GoalExpanded({
   layoutId,
   onMarkNotDone,
   onFinish,
+  setStretchStage,
 }: GoalExpandedProps) {
   const [showCelebration, setShowCelebration] = useState(false);
   const [flyingCoins, setFlyingCoins] = useState<
@@ -150,7 +152,6 @@ export function GoalExpanded({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [widgetMessage, setWidgetMessage] = useState<string>("");
   const timerDuration = getTaskTimer(task);
-  const [stretchStage, setStretchStage] = useState<string>("");
 
   // Fetch message when component mounts
   useEffect(() => {
@@ -160,12 +161,28 @@ export function GoalExpanded({
     };
     fetchMessage();
   }, [task]);
-
   const getStretchingStage = (timeLeft: number): string => {
-    if (timeLeft > 60) return "LEFT";
-    if (timeLeft > 30) return "RIGHT";
-    return "FORWARD";
+    // Calculate which 10-second interval we're in
+    const interval = Math.floor(timeLeft / 10);
+
+    // Cycle through positions based on the interval
+    switch (interval % 3) {
+      case 0:
+        return "LEFT";
+      case 1:
+        return "RIGHT";
+      case 2:
+        return "FORWARD";
+      default:
+        return "FORWARD";
+    }
   };
+
+  useEffect(() => {
+    if (task.title.toLowerCase().includes("stretch") && timerDuration) {
+      setStretchStage(getStretchingStage(timerDuration));
+    }
+  }, [timerDuration]);
 
   const handleMarkDone = () => {
     // Get button position
@@ -291,6 +308,7 @@ export function GoalExpanded({
                     //   handleMarkDone();
                     // }
                   }}
+                  isStretching={task.title.toLowerCase().includes("stretch")}
                 />
               )}
 
@@ -739,15 +757,15 @@ User: ${inputText}`;
           </div>
 
           <div className="border-t p-4">
-            <div className="flex gap-2">
+            <div className="flex gap-2 max-w-[85%] mx-auto">
               <div
                 className={`flex-1 relative flex items-center bg-white rounded-full shadow-sm pl-4 ${
                   isListening ? "bg-red-50" : ""
                 }`}
               >
                 {isListening ? (
-                  <div className="flex-1 text-center text-red-500 py-4">
-                    Recording... (tap 🎤 to stop)
+                  <div className="flex-1 text-center text-red-500 py-2 text-sm">
+                    Recording... (tap 🎤)
                   </div>
                 ) : (
                   <input
@@ -759,12 +777,12 @@ User: ${inputText}`;
                         handleSendMessage();
                       }
                     }}
-                    className="flex-1 bg-transparent border-none outline-none px-2 py-4 text-lg"
-                    placeholder="Say anything..."
+                    className="flex-1 bg-transparent border-none outline-none px-2 py-2 text-base min-w-0"
+                    placeholder="Message Widget..."
                   />
                 )}
                 <motion.div
-                  className={`p-3 mr-2 flex items-center justify-center cursor-pointer rounded-full ${
+                  className={`p-2 flex items-center justify-center cursor-pointer rounded-full shrink-0 ${
                     isListening
                       ? "bg-red-100 animate-pulse"
                       : "hover:bg-gray-100"
@@ -774,18 +792,18 @@ User: ${inputText}`;
                   transition={{ type: "spring", damping: 10, stiffness: 100 }}
                   onClick={handleVoiceInput}
                 >
-                  <span className="text-3xl">{isListening ? "🔴" : "🎤"}</span>
+                  <span className="text-2xl">{isListening ? "🔴" : "🎤"}</span>
                 </motion.div>
               </div>
               {!isListening && (
                 <motion.div
-                  className="w-16 h-16 min-w-16 min-h-16 flex items-center justify-center cursor-pointer"
+                  className="w-12 h-12 min-w-12 min-h-12 flex items-center justify-center cursor-pointer"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   transition={{ type: "spring", damping: 10, stiffness: 100 }}
                   onClick={handleSendMessage}
                 >
-                  <img src="/icons/chat.png" alt="Send" className="w-16 h-16" />
+                  <img src="/icons/chat.png" alt="Send" className="w-12 h-12" />
                 </motion.div>
               )}
             </div>
@@ -834,6 +852,7 @@ function TasksScreen({
 }) {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [playDoor] = useSound("/sounds/door.mp3");
+  const [playPop] = useSound("/sounds/pop.mp3");
 
   const [isAdding, setIsAdding] = useState(false);
 
@@ -1002,7 +1021,10 @@ function TasksScreen({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="flex items-center gap-2 p-3 rounded-xl bg-white shadow-sm hover:bg-gray-50 transition-colors"
-                  onClick={() => onAddTask(goal.title)}
+                  onClick={() => {
+                    onAddTask(goal.title);
+                    playPop();
+                  }}
                 >
                   <span className={`text-2xl`}>{goal.icon}</span>
                   <span className="text-left text-sm">{goal.title}</span>
@@ -1100,7 +1122,7 @@ const SHOP_ITEMS: ShopItem[] = [
   },
   {
     id: "mattress",
-    name: "Zinus Matttress",
+    name: "Zinus Mattress",
     description: "No bedframe needed!",
     price: 200,
     image: "/stuff/mattress.png",
@@ -1319,7 +1341,7 @@ const getTaskTimer = (task: Task): number | null => {
     return 120; // 2 minutes for brushing teeth
   }
   if (title.includes("stretch") || title.includes("stretching")) {
-    return 300; // 5 minutes for stretching
+    return 90; // 1.5 minutes for stretching
   }
   return null;
 };
@@ -1328,13 +1350,16 @@ const getTaskTimer = (task: Task): number | null => {
 function TaskTimer({
   seconds,
   onComplete,
+  isStretching = false,
 }: {
   seconds: number;
   onComplete: () => void;
+  isStretching?: boolean;
 }) {
   const [timeLeft, setTimeLeft] = useState(seconds);
   const [isRunning, setIsRunning] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [playStretch, { stop }] = useSound("/sounds/stretch.mp3");
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -1378,7 +1403,16 @@ function TaskTimer({
         </div>
 
         <button
-          onClick={() => setIsRunning(!isRunning)}
+          onClick={() => {
+            if (isStretching && !isRunning) {
+              setIsRunning(true);
+              playStretch();
+            }
+            if (isRunning) {
+              stop();
+              setIsRunning(false);
+            }
+          }}
           className={`w-full py-3 rounded-lg text-lg font-semibold transition-colors ${
             isRunning
               ? "bg-red-500 hover:bg-red-600 text-white"
@@ -1472,6 +1506,7 @@ export default function CoreApp() {
   >("home");
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [stretchStage, setStretchStage] = useState<string>("");
 
   const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(
     new Set()
@@ -1518,7 +1553,7 @@ export default function CoreApp() {
   const userData = data?.userData?.[0];
 
   useEffect(() => {
-    if (user && !userData) {
+    if (user && !userData && !isLoading) {
       // Initialize user data if it doesn't exist
       db.transact([
         tx.userData[user.id].update({
@@ -1775,6 +1810,7 @@ export default function CoreApp() {
                 purchasedItems={userData?.purchasedItems.map(
                   (item: any) => item.id
                 )}
+                stretchStage={stretchStage}
               />
             </div>
             {/* Scrollable Tasks List */}
@@ -2020,6 +2056,7 @@ export default function CoreApp() {
                   setIsCelebrating(false);
                 }, 2000);
               }}
+              setStretchStage={setStretchStage}
             />
           </>
         )}

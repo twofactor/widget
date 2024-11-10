@@ -76,3 +76,42 @@ body {
   box-shadow: 0px 4px 0px #d7d7d7;
   border-radius: 12px;
 }
+
+/* Add these new rules at the bottom of your file */
+html {
+  height: 100%;
+  /* Prevent scroll bounce on Safari */
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  /* Prevent zooming */
+  touch-action: manipulation;
+}
+
+body {
+  /* Enable scrolling on the main content */
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Prevent scroll bounce on Safari */
+  -webkit-overflow-scrolling: touch;
+  /* Prevent text selection zoom */
+  -webkit-text-size-adjust: none;
+}
+
+/* Prevent zoom on input focus */
+input,
+textarea,
+select {
+  font-size: 16px !important;
+  max-width: 100%;
+}
+
+@supports (-webkit-touch-callout: none) {
+  /* Additional iOS-specific fixes */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}

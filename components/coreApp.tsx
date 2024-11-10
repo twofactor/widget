@@ -152,6 +152,7 @@ export function GoalExpanded({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [widgetMessage, setWidgetMessage] = useState<string>("");
   const timerDuration = getTaskTimer(task);
+  const [, { stop }] = useSound("/sounds/stretch.mp3");
 
   // Fetch message when component mounts
   useEffect(() => {
@@ -185,6 +186,11 @@ export function GoalExpanded({
   }, [timerDuration]);
 
   const handleMarkDone = () => {
+    // Stop stretching music if this is a stretching task
+    if (task.title.toLowerCase().includes("stretch")) {
+      stop();
+    }
+
     // Get button position
     const button = buttonRef.current;
     if (button) {
@@ -1503,7 +1509,6 @@ interface InstantTask {
   id: string;
   title: string;
   icon: string;
-  done: boolean;
   userId: string; // to associate tasks with users
 }
 

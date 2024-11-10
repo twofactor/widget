@@ -67,40 +67,50 @@ export default function Widget({
       />
 
       {/* Eames Chair */}
-      {purchasedItems.includes("chair") && (
-        <motion.div
-          className="absolute left-[5%] top-[30%]"
-          style={{ zIndex: 1 }}
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{
-            type: "spring",
-            damping: 8,
-            stiffness: 100,
-            delay: 0.2,
-          }}
-        >
+
+      <motion.div
+        className="absolute left-[5%] top-[30%]"
+        style={{ zIndex: 1 }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{
+          type: "spring",
+          damping: 8,
+          stiffness: 100,
+          delay: 0.2,
+        }}
+      >
+        {purchasedItems.includes("chair") ? (
           <img src="/stuff/chair.png" alt="Eames Chair" className="w-48" />
-        </motion.div>
-      )}
+        ) : (
+          <img
+            src="/stuff/oldchair.png"
+            alt="Eames Chair"
+            className="w-12 mt-16 ml-6"
+          />
+        )}
+      </motion.div>
 
       {/* Mattress/Mat */}
-      {purchasedItems.includes("mattress") && (
-        <motion.div
-          className="absolute left-[5%] top-[68%]"
-          style={{ zIndex: 1 }}
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{
-            type: "spring",
-            damping: 8,
-            stiffness: 100,
-            delay: 0.3,
-          }}
-        >
+
+      <motion.div
+        className="absolute left-[5%] top-[68%]"
+        style={{ zIndex: 1 }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{
+          type: "spring",
+          damping: 8,
+          stiffness: 100,
+          delay: 0.3,
+        }}
+      >
+        {purchasedItems.includes("mattress") ? (
           <img src="/stuff/mattress.png" alt="Mattress" className="w-32" />
-        </motion.div>
-      )}
+        ) : (
+          <img src="/stuff/trash.png" alt="Trash" className="w-12" />
+        )}
+      </motion.div>
 
       {/* Desk with Computer */}
 
@@ -119,7 +129,7 @@ export default function Widget({
         {purchasedItems.includes("desk") ? (
           <img src="/stuff/desk.png" alt="Desk" className="w-36" />
         ) : (
-          <div className="w-36 h-36" />
+          <img src="/stuff/laptop.png" alt="Desk" className="w-12 mt-12 mr-6" />
         )}
 
         {purchasedItems.includes("computer") && (
@@ -147,22 +157,25 @@ export default function Widget({
       </motion.div>
 
       {/* poster Logo on Wall */}
-      {purchasedItems.includes("poster") && (
-        <motion.div
-          className="absolute top-[15%] right-[60%]"
-          style={{ zIndex: 1 }}
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{
-            type: "spring",
-            damping: 8,
-            stiffness: 100,
-            delay: 0.1,
-          }}
-        >
+
+      <motion.div
+        className="absolute top-[15%] right-[60%]"
+        style={{ zIndex: 1 }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{
+          type: "spring",
+          damping: 8,
+          stiffness: 100,
+          delay: 0.1,
+        }}
+      >
+        {purchasedItems.includes("poster") ? (
           <img src="/stuff/poster.png" alt="Cursor Logo" className="w-16" />
-        </motion.div>
-      )}
+        ) : (
+          <img src="/stuff/stains.png" alt="Cursor Logo" className="w-16" />
+        )}
+      </motion.div>
     </div>
   );
 }

@@ -17,6 +17,7 @@ import { getChatCompletion } from "@/actions/openai";
 import { getTextToSpeech } from "@/actions/elevenlabs";
 import { CurvedBackground } from "./CurvedBackground";
 import { CurvedBackground2 } from "./CurvedBackground2";
+import { getSpeechToText } from "@/actions/openai";
 
 const iconToImageUrl = (icon: string): string | null => {
   // switch (icon) {
@@ -294,7 +295,7 @@ export function GoalExpanded({
                   onClick={handleMarkDone}
                 >
                   <span>Mark as done</span>
-                  <span className="text-xl">🪙</span>
+                  <span className="text-xl">(50 🪙)</span>
                 </button>
               ) : (
                 <button
@@ -408,8 +409,10 @@ function ChatScreen({
     },
   ]);
   const [inputText, setInputText] = useState("");
+  const [playDoor] = useSound("/sounds/door.mp3");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isListening, setIsListening] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   // @ts-ignore
   const recognitionRef = useRef<any>(null); // Store recognition instance
 
@@ -535,63 +538,53 @@ User: ${inputText}`;
   };
 
   // Add this function to handle voice input
-  const handleVoiceInput = () => {
+  const handleVoiceInput = async () => {
     if (isListening) {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
+      if (mediaRecorderRef.current) {
+        mediaRecorderRef.current.stop();
       }
       setIsListening(false);
       return;
     }
 
-    if (!("webkitSpeechRecognition" in window)) {
-      alert("Voice recognition is not supported in your browser");
-      return;
-    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
 
-    // @ts-ignore
-    const recognition = new (window as any).webkitSpeechRecognition();
-    recognitionRef.current = recognition;
+      const audioChunks: Blob[] = [];
 
-    recognition.continuous = true; // Allow continuous results
-    recognition.interimResults = true; // Show results as we speak
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
 
-    recognition.onstart = () => {
-      setIsListening(true);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-      recognitionRef.current = null;
-    };
-
-    // @ts-ignore
-    recognition.onresult = (event) => {
-      let finalTranscript = "";
-      let interimTranscript = "";
-
-      // Loop through the results to build both interim and final transcripts
-      for (let i = 0; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        try {
+          const text = await getSpeechToText(audioBlob);
+          setInputText(text);
+          // Add this line to automatically send the message
+          setTimeout(() => handleSendMessage(), 100);
+        } catch (error) {
+          console.error("Failed to transcribe:", error);
         }
-      }
+        stream.getTracks().forEach((track) => track.stop());
+      };
 
-      // Update the input with either the final or interim transcript
-      setInputText(finalTranscript || interimTranscript);
-    };
+      mediaRecorder.start();
+      setIsListening(true);
 
-    // Add timeout to automatically stop after 10 seconds
-    setTimeout(() => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    }, 10000);
-
-    recognition.start();
+      // Stop recording after 10 seconds
+      setTimeout(() => {
+        if (mediaRecorderRef.current?.state === "recording") {
+          mediaRecorderRef.current.stop();
+          setIsListening(false);
+        }
+      }, 10000);
+    } catch (error) {
+      console.error("Error handling voice input:", error);
+      setIsListening(false);
+    }
   };
 
   return (
@@ -610,7 +603,10 @@ User: ${inputText}`;
         <div className="relative z-10 p-4 h-full flex flex-col">
           <h2 className="text-2xl font-bold mb-4 self-center">Chat</h2>
           <button
-            onClick={onClose}
+            onClick={() => {
+              onClose();
+              playDoor();
+            }}
             className="flex flex-col items-center mb-4 self-start"
           >
             <img src="/icons/exit.png" alt="back" className="w-10 h-10" />
@@ -692,21 +688,29 @@ User: ${inputText}`;
 
           <div className="border-t p-4">
             <div className="flex gap-2">
-              <div className="flex-1 relative flex items-center bg-white rounded-full shadow-sm pl-4">
-                <input
-                  type="text"
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      handleSendMessage();
-                    }
-                  }}
-                  className={`flex-1 bg-transparent border-none outline-none px-2 py-4 text-lg ${
-                    isListening ? "bg-gray-50" : ""
-                  }`}
-                  placeholder="Say anything..."
-                />
+              <div
+                className={`flex-1 relative flex items-center bg-white rounded-full shadow-sm pl-4 ${
+                  isListening ? "bg-red-50" : ""
+                }`}
+              >
+                {isListening ? (
+                  <div className="flex-1 text-center text-red-500 py-4">
+                    Recording... (tap 🎤 to stop)
+                  </div>
+                ) : (
+                  <input
+                    type="text"
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        handleSendMessage();
+                      }
+                    }}
+                    className="flex-1 bg-transparent border-none outline-none px-2 py-4 text-lg"
+                    placeholder="Say anything..."
+                  />
+                )}
                 <motion.div
                   className={`p-3 mr-2 flex items-center justify-center cursor-pointer rounded-full ${
                     isListening
@@ -721,15 +725,17 @@ User: ${inputText}`;
                   <span className="text-3xl">{isListening ? "🔴" : "🎤"}</span>
                 </motion.div>
               </div>
-              <motion.div
-                className="w-16 h-16 min-w-16 min-h-16 flex items-center justify-center cursor-pointer"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                transition={{ type: "spring", damping: 10, stiffness: 100 }}
-                onClick={handleSendMessage}
-              >
-                <img src="/icons/chat.png" alt="Send" className="w-16 h-16" />
-              </motion.div>
+              {!isListening && (
+                <motion.div
+                  className="w-16 h-16 min-w-16 min-h-16 flex items-center justify-center cursor-pointer"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ type: "spring", damping: 10, stiffness: 100 }}
+                  onClick={handleSendMessage}
+                >
+                  <img src="/icons/chat.png" alt="Send" className="w-16 h-16" />
+                </motion.div>
+              )}
             </div>
           </div>
         </div>
@@ -775,6 +781,8 @@ function TasksScreen({
   onMarkNotDone: (id: string) => void;
 }) {
   const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [playDoor] = useSound("/sounds/door.mp3");
+
   const [isAdding, setIsAdding] = useState(false);
 
   const handleAddTask = async () => {
@@ -814,7 +822,10 @@ function TasksScreen({
         <div className="p-4 flex-shrink-0">
           <h2 className="text-2xl font-bold mb-4">Tasks</h2>
           <button
-            onClick={onClose}
+            onClick={() => {
+              onClose();
+              playDoor();
+            }}
             className="flex flex-col items-center mb-4 self-start"
           >
             <img src="/icons/exit.png" alt="back" className="w-10 h-10" />
@@ -1037,7 +1048,7 @@ const SHOP_ITEMS: ShopItem[] = [
   },
   {
     id: "mattress",
-    name: "Cozy Matttress",
+    name: "Zinus Matttress",
     description: "No bedframe needed!",
     price: 200,
     image: "/stuff/mattress.png",
@@ -1100,6 +1111,7 @@ function CoinsScreen({
   purchasedItems: PurchasedItem[];
   onPurchaseItem: (item: ShopItem) => void;
 }) {
+  const [playDoor] = useSound("/sounds/door.mp3");
   return (
     <motion.div
       initial={{ y: "100%" }}
@@ -1115,7 +1127,13 @@ function CoinsScreen({
 
         <div className="relative z-10 p-4 h-full flex flex-col">
           <div className="flex justify-between items-center mb-4">
-            <button onClick={onClose} className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                onClose();
+                playDoor();
+              }}
+              className="flex items-center gap-2"
+            >
               <img src="/icons/exit.png" alt="back" className="w-10 h-10" />
               <span>Back</span>
             </button>
@@ -1501,6 +1519,7 @@ export default function CoreApp() {
         }),
       ]);
     }
+    playMoney();
   };
 
   // const handleAddTask = async (title: string) => {
@@ -1610,7 +1629,7 @@ export default function CoreApp() {
   // Add function to handle purchases
   const handlePurchaseItem = (item: ShopItem) => {
     if (!userData || !user?.id) return;
-
+    playCash();
     if (userData.coins >= item.price) {
       db.transact([
         tx.userData[user.id].update({

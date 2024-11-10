@@ -981,7 +981,9 @@ function TasksScreen({
                           {task.icon}
                         </div>
                       )}
-                      <span className="text-xl">{task.title}</span>
+                      <span className="text-xl">
+                        {task.title} {task.done ? "(Done)" : "(Not Done)"}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
                       {/* Add toggle button */}

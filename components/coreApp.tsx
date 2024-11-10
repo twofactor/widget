@@ -1585,7 +1585,7 @@ export default function CoreApp() {
         tx.userData[user.id].update({
           id: user.id,
           coins: 0,
-          purchasedItems: [{ id: "mattress" }, { id: "poster" }],
+          purchasedItems: [],
         }),
       ]);
     }

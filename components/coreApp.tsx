@@ -285,7 +285,7 @@ export function GoalExpanded({
             transition={{ delay: 0.2 }}
             className="px-4 pb-4"
           >
-            <div className="border-t pt-4">
+            <div className="border-t pt-4 min-h-[200px]">
               <h3 className="font-semibold mb-2">Task Details</h3>
 
               {/* Widget's message in task details */}

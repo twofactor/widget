@@ -10,7 +10,7 @@ export default function Widget({
 }: {
   taskType: string | null;
   isCelebrating: boolean;
-  purchasedItems: String[];
+  purchasedItems: string[];
 }) {
   const determineImage = () => {
     if (isCelebrating) {

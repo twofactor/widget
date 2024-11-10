@@ -30,7 +30,38 @@ export default function Home() {
   const { isLoading, user, error } = db.useAuth();
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F5F1E0] relative flex-col gap-4">
+        <div className="absolute inset-0 z-0">
+          <CurvedBackground />
+        </div>
+        <motion.div
+          className="w-full flex justify-center"
+          style={{ zIndex: 50 }}
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{
+            type: "spring",
+            damping: 8,
+            stiffness: 100,
+            delay: 0.7,
+          }}
+        >
+          <img
+            src="/character/idle.gif"
+            alt="Centered Image"
+            className="w-[128px]"
+          />
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-xl font-medium z-50"
+        >
+          Loading...
+        </motion.div>
+      </div>
+    );
   }
   if (error) {
     return <div>Uh oh! {error.message}</div>;

@@ -26,6 +26,7 @@
     "react-dom": "^18.2.0",
     "tailwind-merge": "^2.5.4",
     "tailwindcss-animate": "^1.0.7",
+    "use-sound": "^4.0.3",
     "uuid": "^11.0.2"
   },
   "devDependencies": {

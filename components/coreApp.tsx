@@ -1,17 +1,11 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { init } from "@instantdb/react";
+import { id, tx, init } from "@instantdb/react";
 import { useState, useRef, useEffect } from "react";
 const APP_ID = "d8419df9-903c-4b0a-b501-534596976600";
 import Widget from "./Widget";
 const db = init({ appId: APP_ID });
 
-import { Noto_Color_Emoji } from "next/font/google";
 import { Ubuntu } from "next/font/google";
-
-const notoColorEmoji = Noto_Color_Emoji({
-  weight: "400",
-  subsets: ["emoji"],
-});
 
 const ubuntu = Ubuntu({
   weight: "400",
@@ -23,21 +17,22 @@ import { getTextToSpeech } from "@/actions/elevenlabs";
 import { CurvedBackground } from "./CurvedBackground";
 import { CurvedBackground2 } from "./CurvedBackground2";
 
-const iconToImageUrl = (icon: string) => {
-  switch (icon) {
-    case "🧺":
-      return "/icons/laundry.png";
-    case "🏃":
-      return "/icons/stretch.png";
-    case "🏙️":
-      return "/icons/city.png";
-    case "🪥":
-      return "/icons/toothbrush.png";
-  }
+const iconToImageUrl = (icon: string): string | null => {
+  // switch (icon) {
+  //   case "🧺":
+  //     return "/icons/laundry.png";
+  //   case "🏃":
+  //     return "/icons/stretch.png";
+  //   case "🏙️":
+  //     return "/icons/city.png";
+  //   case "🪥":
+  //     return "/icons/toothbrush.png";
+  // }
+  return null;
 };
 
 interface Task {
-  id: number;
+  id: string;
   title: string;
   icon: string;
   done: boolean;
@@ -77,11 +72,9 @@ function CelebrationModal({ task, onClose, onFinish }: CelebrationModalProps) {
         className="bg-white rounded-2xl p-8 shadow-xl text-center max-w-md mx-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <span className={`text-6xl ${notoColorEmoji.className}`}>🎉</span>
+        <span className={`text-6xl`}>🎉</span>
         <h2 className="text-2xl font-bold mt-4 mb-2">Amazing job!</h2>
-        <p
-          className={`text-gray-600 mb-4 ${notoColorEmoji.className} ${ubuntu.className}`}
-        >
+        <p className={`text-gray-600 mb-4 ${ubuntu.className}`}>
           You completed &quot;{task.title}&quot; and earned 50 coins! 🌟
         </p>
         <button
@@ -208,14 +201,14 @@ export function GoalExpanded({
       ))}
 
       <div
-        className="fixed inset-0 z-10 flex items-start justify-center p-4"
+        className="fixed inset-0 z-10 flex items-end justify-center p-4"
         onClick={(e) => {
           if (e.target === e.currentTarget) onClose();
         }}
       >
         <motion.div
           layoutId={layoutId}
-          className="bg-white w-full max-w-lg rounded-xl shadow-lg mt-[40vh]"
+          className="bg-white w-full max-w-lg rounded-xl shadow-lg mb-[15vh]"
           transition={{
             type: "spring",
             damping: 25,
@@ -228,13 +221,13 @@ export function GoalExpanded({
             <div className="flex items-center gap-4">
               {iconToImageUrl(task.icon) ? (
                 <img
-                  src={iconToImageUrl(task.icon)}
+                  src={iconToImageUrl(task.icon) || ""}
                   alt={task.icon}
                   className="w-10 h-10"
                 />
               ) : (
                 <div
-                  className={`w-10 h-10 flex items-center justify-center text-4xl ${notoColorEmoji.className}`}
+                  className={`w-10 h-10 flex items-center justify-center text-4xl`}
                 >
                   {task.icon}
                 </div>
@@ -304,9 +297,12 @@ export function GoalExpanded({
                 </button>
               ) : (
                 <button
-                  onClick={() => {
-                    onMarkNotDone();
-                    onClose();
+                  onClick={async () => {
+                    await db.transact([
+                      tx.tasks[task.id.toString()].update({
+                        done: false,
+                      }),
+                    ]);
                   }}
                   className="w-full bg-gray-100 px-4 py-2 rounded-lg hover:bg-gray-200"
                 >
@@ -340,7 +336,7 @@ interface Message {
   id: string;
   text: string;
   sender: "user" | "widget";
-  relevantTasks?: number[];
+  relevantTasks?: string[];
 }
 
 function ChatTaskCard({
@@ -348,7 +344,7 @@ function ChatTaskCard({
   onSelectTask,
 }: {
   task: Task;
-  onSelectTask: (taskId: number) => void;
+  onSelectTask: (taskId: string) => void;
 }) {
   return (
     <div
@@ -361,13 +357,13 @@ function ChatTaskCard({
         <div className="flex items-center gap-4">
           {iconToImageUrl(task.icon) ? (
             <img
-              src={iconToImageUrl(task.icon)}
+              src={iconToImageUrl(task.icon) || ""}
               alt={task.icon}
               className="w-10 h-10"
             />
           ) : (
             <div
-              className={`w-10 h-10 flex items-center justify-center text-4xl ${notoColorEmoji.className}`}
+              className={`w-10 h-10 flex items-center justify-center text-4xl`}
             >
               {task.icon}
             </div>
@@ -393,8 +389,8 @@ function ChatTaskCard({
 interface ChatScreenProps {
   onClose: () => void;
   goals: Task[];
-  onSelectTask: (taskId: number) => void;
-  onAddTask: (title: string) => Promise<number | void>;
+  onSelectTask: (taskId: string) => void;
+  onAddTask: (title: string) => Promise<string | void>;
 }
 
 function ChatScreen({
@@ -459,7 +455,7 @@ ${goals
 
 IMPORTANT INSTRUCTIONS:
 If user wants to create a task, respond with a fun message one sentence max, and end it with "CREATE_NEW_TASK:Task Title"
-If user asks about existing tasks, respond with a fun message, and end it with "RELEVANT_TASKS:1,2,3"
+If user asks about existing tasks, respond with a fun message, and end it with "RELEVANT_TASKS:1,2,3" Take careful note of the task ids, they can be a bit long.
 
 If you are suggesting relevent tasks without context, showcase the ones that aren't done yet.
 
@@ -477,16 +473,18 @@ User: ${inputText}`;
     const response = await getChatCompletion(fullPrompt);
     if (response) {
       let messageText = response;
-      let relevantTaskIds: number[] = [];
+      let relevantTaskIds: string[] = [];
 
-      // Check for markers
-      const taskMarker = response.match(/RELEVANT_TASKS:([0-9,\s]+)/);
+      console.log(response);
+
+      // Update the regex patterns to be more precise
+      const taskMarker = response.match(/RELEVANT_TASKS:([\w\-,\s]+)/);
       const createTaskMarker = response.match(/CREATE_NEW_TASK:(.+)$/);
 
       if (createTaskMarker) {
         const newTaskTitle = createTaskMarker[1].trim();
         const newTaskId = await onAddTask(newTaskTitle);
-        if (newTaskId !== undefined) {
+        if (newTaskId) {
           messageText = messageText.replace(/CREATE_NEW_TASK:.+$/, "").trim();
           const confirmMessage: Message = {
             id: (Date.now() + 2).toString(),
@@ -498,13 +496,12 @@ User: ${inputText}`;
         }
       } else if (taskMarker) {
         messageText = messageText
-          .replace(/RELEVANT_TASKS:[0-9,\s]+/, "")
+          .replace(/RELEVANT_TASKS:[\w\-,\s]+/, "")
           .trim();
         relevantTaskIds = taskMarker[1]
           .split(",")
-          .map((num) => num.trim())
-          .filter(Boolean)
-          .map(Number);
+          .map((id) => id.trim())
+          .filter(Boolean);
 
         const widgetMessage: Message = {
           id: (Date.now() + 1).toString(),
@@ -741,7 +738,7 @@ User: ${inputText}`;
 }
 
 interface Task {
-  id: number;
+  id: string;
   title: string;
   icon: string;
   done: boolean;
@@ -759,7 +756,7 @@ const SUGGESTED_GOALS = [
   { title: "Read a book", icon: "📚" },
   { title: "Meditate", icon: "🧘" },
   { title: "Take a shower", icon: "🚿" },
-  { title: "Wash dishes", icon: "🍽️" },
+  { title: "Wash dishes", icon: "🧹" },
   { title: "Clean up", icon: "🧹" },
 ];
 
@@ -768,11 +765,13 @@ function TasksScreen({
   tasks,
   onAddTask,
   onDeleteTask,
+  onMarkNotDone,
 }: {
   onClose: () => void;
   tasks: Task[];
-  onAddTask: (title: string) => Promise<number | void>;
-  onDeleteTask: (id: number) => void;
+  onAddTask: (title: string) => Promise<string | void>;
+  onDeleteTask: (id: string) => void;
+  onMarkNotDone: (id: string) => void;
 }) {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [isAdding, setIsAdding] = useState(false);
@@ -783,6 +782,23 @@ function TasksScreen({
     await onAddTask(newTaskTitle);
     setNewTaskTitle("");
     setIsAdding(false);
+  };
+
+  const handleToggleTaskStatus = async (
+    taskId: string,
+    currentStatus: boolean
+  ) => {
+    if (currentStatus) {
+      // If task is currently done, mark it as not done
+      onMarkNotDone(taskId);
+    } else {
+      // If task is currently not done, mark it as done
+      await db.transact([
+        tx.tasks[taskId].update({
+          done: true,
+        }),
+      ]);
+    }
   };
 
   return (
@@ -856,25 +872,40 @@ function TasksScreen({
                     <div className="flex items-center gap-4">
                       {iconToImageUrl(task.icon) ? (
                         <img
-                          src={iconToImageUrl(task.icon)}
+                          src={iconToImageUrl(task.icon) || ""}
                           alt={task.icon}
                           className="w-10 h-10"
                         />
                       ) : (
                         <div
-                          className={`w-10 h-10 flex items-center justify-center text-4xl ${notoColorEmoji.className}`}
+                          className={`w-10 h-10 flex items-center justify-center text-4xl`}
                         >
                           {task.icon}
                         </div>
                       )}
                       <span className="text-xl">{task.title}</span>
                     </div>
-                    <button
-                      onClick={() => onDeleteTask(task.id)}
-                      className="text-red-500 hover:text-red-700 transition-colors px-4 py-2 rounded-lg hover:bg-red-50"
-                    >
-                      Delete
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {/* Add toggle button */}
+                      <button
+                        onClick={() =>
+                          handleToggleTaskStatus(task.id, task.done)
+                        }
+                        className={`p-2 px-4 rounded-lg transition-colors ${
+                          task.done
+                            ? "bg-green-100 text-green-600"
+                            : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                        }`}
+                      >
+                        <span className="text-xl font-bold">✓</span>
+                      </button>
+                      <button
+                        onClick={() => onDeleteTask(task.id)}
+                        className="text-red-500 hover:text-red-700 transition-colors px-4 py-2 rounded-lg hover:bg-red-50"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -909,9 +940,7 @@ function TasksScreen({
                   className="flex items-center gap-2 p-3 rounded-xl bg-white shadow-sm hover:bg-gray-50 transition-colors"
                   onClick={() => onAddTask(goal.title)}
                 >
-                  <span className={`text-2xl ${notoColorEmoji.className}`}>
-                    {goal.icon}
-                  </span>
+                  <span className={`text-2xl`}>{goal.icon}</span>
                   <span className="text-left text-sm">{goal.title}</span>
                 </motion.button>
               ))}
@@ -936,7 +965,7 @@ function EmptyState({ onCreateTask }: { onCreateTask: () => void }) {
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col items-center justify-center p-8 text-center"
     >
-      <span className={`text-6xl mb-4 ${notoColorEmoji.className}`}>✨</span>
+      <span className={`text-6xl mb-4`}>✨</span>
       <h3 className="text-2xl font-bold mb-2">No goals yet!</h3>
       <p className="text-gray-600 mb-6">
         Let&apos;s create your first goal to get started
@@ -1355,23 +1384,133 @@ function SettingsScreen({
   );
 }
 
+interface InstantTask {
+  id: string;
+  title: string;
+  icon: string;
+  done: boolean;
+  userId: string; // to associate tasks with users
+}
+
 export default function CoreApp() {
   const { user } = db.useAuth();
-  const [selectedGoal, setSelectedGoal] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"home" | "chat" | "tasks">("home");
+  const [selectedGoal, setSelectedGoal] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<
+    "home" | "chat" | "tasks" | "shop"
+  >("home");
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  const [goals, setGoals] = useState([
-    { id: 1, title: "Put away laundry", icon: "🧺", done: false },
-    { id: 2, title: "Stretching", icon: "🏃", done: false },
-    { id: 3, title: "Meal Prep", icon: "🥗", done: false },
-    { id: 4, title: "Brush teeth", icon: "🪥", done: false },
-  ]);
+  const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(
+    new Set()
+  );
 
   const signout = async () => {
     await db.auth.signOut();
   };
+
+  const { data, isLoading } = db.useQuery({
+    tasks: {
+      $: {
+        where: {
+          userId: user?.id || "",
+        },
+        order: {
+          serverCreatedAt: "desc",
+        },
+      },
+    },
+    userData: {
+      $: {
+        where: {
+          id: user?.id || "",
+        },
+      },
+    },
+  });
+
+  // Transform InstantDB tasks to match your Task interface
+  const goals = (data?.tasks || []).map((task: any) => ({
+    id: task.id,
+    title: task.title,
+    icon: task.icon,
+    done: task.done,
+  }));
+
+  const userData = data?.userData?.[0];
+
+  useEffect(() => {
+    if (user && !userData) {
+      // Initialize user data if it doesn't exist
+      db.transact([
+        tx.userData[user.id].update({
+          id: user.id,
+          coins: 0,
+          purchasedItems: [{ id: "mattress" }, { id: "poster" }],
+        }),
+      ]);
+    }
+  }, [user, userData]);
+
+  useEffect(() => {
+    // on load, get all completed tasks
+    // we only do this on load so we can keep the completed tasks in sync with the server
+    const completedTasks = goals.filter((t) => t.done);
+    setCompletedTaskIds(new Set(completedTasks.map((t) => t.id)));
+  }, []);
+
+  // filtere out tasks in the completed tasks set
+  const filteredGoals = goals.filter((t) => !completedTaskIds.has(t.id));
+
+  const handleAddTask = async (title: string) => {
+    const emoji = await generateEmojiForTask(title);
+    const taskId = id(); // Generate UUID using InstantDB's id() function
+
+    await db.transact([
+      tx.tasks[taskId].update({
+        id: taskId,
+        title,
+        icon: emoji,
+        done: false,
+        userId: user?.id,
+      }),
+    ]);
+
+    return taskId;
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    await db.transact([tx.tasks[taskId].delete()]);
+  };
+
+  const handleMarkDone = async () => {
+    if (selectedGoal) {
+      await db.transact([
+        tx.tasks[selectedGoal.toString()].update({
+          done: true,
+        }),
+        tx.userData[user?.id || ""].update({
+          coins: (userData?.coins || 0) + 50,
+        }),
+      ]);
+    }
+  };
+
+  // const handleAddTask = async (title: string) => {
+  //   const emoji = await generateEmojiForTask(title);
+  //   const newTask = {
+  //     id: Math.floor(Math.random() * 1000000), // Random ID between 0 and 999999
+  //     title,
+  //     icon: emoji,
+  //     done: false,
+  //   };
+  //   setGoals((prev) => [...prev, newTask]);
+  //   return newTask.id; // Return the new task ID
+  // };
+
+  // const handleDeleteTask = (taskId: number) => {
+  //   setGoals(goals.filter((goal) => goal.id !== taskId));
+  // };
 
   const handleChat = async () => {
     const response = await getChatCompletion("Hello, how are you?");
@@ -1389,16 +1528,17 @@ export default function CoreApp() {
   };
 
   const iconToImageUrl = (icon: string) => {
-    switch (icon) {
-      case "🧺":
-        return "/icons/laundry.png";
-      case "🏃":
-        return "/icons/stretch.png";
-      case "🏙️":
-        return "/icons/city.png";
-      case "🪥":
-        return "/icons/toothbrush.png";
-    }
+    // switch (icon) {
+    //   case "🧺":
+    //     return "/icons/laundry.png";
+    //   case "🏃":
+    //     return "/icons/stretch.png";
+    //   case "🏙️":
+    //     return "/icons/city.png";
+    //   case "🪥":
+    //     return "/icons/toothbrush.png";
+    // }
+    return null;
   };
 
   const taskContainsSpecialForm = (task: Task | undefined) => {
@@ -1436,58 +1576,64 @@ export default function CoreApp() {
   const taskType = taskContainsSpecialForm(selectedGoalFromGoals);
   const [isCelebrating, setIsCelebrating] = useState(false);
 
-  const handleTaskSelect = (taskId: number) => {
+  const handleTaskSelect = (taskId: string) => {
     setActiveTab("home");
     setTimeout(() => {
       setSelectedGoal(taskId);
     }, 200);
   };
 
-  const handleAddTask = async (title: string) => {
-    const emoji = await generateEmojiForTask(title);
-    const newTask = {
-      id: Math.floor(Math.random() * 1000000), // Random ID between 0 and 999999
-      title,
-      icon: emoji,
-      done: false,
-    };
-    setGoals((prev) => [...prev, newTask]);
-    return newTask.id; // Return the new task ID
-  };
+  // const [coins, setCoins] = useState(0);
 
-  const handleDeleteTask = (taskId: number) => {
-    setGoals(goals.filter((goal) => goal.id !== taskId));
-  };
+  // const handleMarkDone = () => {
+  //   setGoals(
+  //     goals.map((goal) =>
+  //       goal.id === selectedGoal ? { ...goal, done: true } : goal
+  //     )
+  //   );
+  //   setCoins((prev) => prev + 50); // Add 50 coins when marking a task as done
+  // };
 
-  const [coins, setCoins] = useState(0);
-
-  const handleMarkDone = () => {
-    setGoals(
-      goals.map((goal) =>
-        goal.id === selectedGoal ? { ...goal, done: true } : goal
-      )
-    );
-    setCoins((prev) => prev + 50); // Add 50 coins when marking a task as done
-  };
-
-  const [purchasedItems, setPurchasedItems] = useState<PurchasedItem[]>([
-    // Start with some default items if desired
-    { id: "mattress" },
-    { id: "poster" },
-  ]);
+  // const [purchasedItems, setPurchasedItems] = useState<PurchasedItem[]>([
+  //   // Start with some default items if desired
+  //   { id: "mattress" },
+  //   { id: "poster" },
+  // ]);
 
   // Add function to handle purchases
   const handlePurchaseItem = (item: ShopItem) => {
-    if (coins >= item.price) {
-      setCoins((prev) => prev - item.price);
-      setPurchasedItems((prev) => [
-        ...prev,
-        {
-          id: item.id,
-          position: item.position,
-        },
+    if (!userData || !user?.id) return;
+
+    if (userData.coins >= item.price) {
+      db.transact([
+        tx.userData[user.id].update({
+          coins: userData.coins - item.price,
+          purchasedItems: [
+            ...userData.purchasedItems,
+            {
+              id: item.id,
+              position: item.position,
+            },
+          ],
+        }),
       ]);
     }
+  };
+
+  const handleMarkNotDone = async (taskId: string) => {
+    // Remove from completedTaskIds set
+    setCompletedTaskIds((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(taskId);
+      return newSet;
+    });
+
+    // Update the task in the database
+    await db.transact([
+      tx.tasks[taskId].update({
+        done: false,
+      }),
+    ]);
   };
 
   return (
@@ -1516,19 +1662,20 @@ export default function CoreApp() {
             tasks={goals}
             onAddTask={handleAddTask}
             onDeleteTask={handleDeleteTask}
+            onMarkNotDone={handleMarkNotDone}
           />
         )}
-        {isShopOpen && (
+        {activeTab === "shop" && (
           <CoinsScreen
-            onClose={() => setIsShopOpen(false)}
-            coins={coins}
-            purchasedItems={purchasedItems}
+            onClose={() => setActiveTab("home")}
+            coins={userData?.coins || 0}
+            purchasedItems={userData?.purchasedItems || []}
             onPurchaseItem={handlePurchaseItem}
           />
         )}
         {activeTab === "home" && !isShopOpen && !isSettingsOpen && (
           <>
-            <CoinCounter coins={coins} onClick={() => setIsShopOpen(true)} />
+            <CoinCounter coins={userData?.coins || 0} onClick={() => {}} />
 
             {/* Add settings button */}
             <motion.button
@@ -1546,17 +1693,19 @@ export default function CoreApp() {
               <Widget
                 taskType={taskType}
                 isCelebrating={isCelebrating}
-                purchasedItems={purchasedItems.map((item) => item.id)}
+                purchasedItems={userData?.purchasedItems.map(
+                  (item: any) => item.id
+                )}
               />
             </div>
             {/* Scrollable Tasks List */}
             <div className="flex-1 overflow-y-auto pb-28 relative z-10">
-              {goals.length === 0 ? (
+              {filteredGoals.length === 0 ? (
                 <EmptyState onCreateTask={() => setActiveTab("tasks")} />
               ) : (
                 <div className="flex flex-col gap-4 p-4">
-                  <AnimatePresence>
-                    {goals.map((task, index) => (
+                  <AnimatePresence mode="popLayout">
+                    {filteredGoals.map((task, index) => (
                       <motion.div
                         key={task.id}
                         initial={{
@@ -1569,12 +1718,22 @@ export default function CoreApp() {
                           opacity: 1,
                           x: 0,
                         }}
+                        exit={{
+                          scale: 0.3,
+                          opacity: 0,
+                          x: 100,
+                          transition: {
+                            duration: 0.2,
+                            ease: "easeOut",
+                          },
+                        }}
                         transition={{
                           type: "spring",
                           damping: 20,
                           stiffness: 300,
-                          delay: 0.3 + index * 0.1,
+                          delay: index * 0.05, // Reduced delay for quicker rearrangement
                         }}
+                        layout // Add this to enable automatic layout animations
                       >
                         <motion.div
                           layoutId={`task-${task.id}`}
@@ -1590,13 +1749,13 @@ export default function CoreApp() {
                           <div className="flex items-center gap-4">
                             {iconToImageUrl(task.icon) ? (
                               <img
-                                src={iconToImageUrl(task.icon)}
+                                src={iconToImageUrl(task.icon) || ""}
                                 alt={task.icon}
                                 className="w-10 h-10"
                               />
                             ) : (
                               <div
-                                className={`w-10 h-10 flex items-center justify-center text-4xl ${notoColorEmoji.className}`}
+                                className={`w-10 h-10 flex items-center justify-center text-4xl`}
                               >
                                 {task.icon}
                               </div>
@@ -1627,7 +1786,7 @@ export default function CoreApp() {
 
       {/* Bottom Navigation - Fixed at bottom, above content */}
       <div className="fixed bottom-0 left-0 right-0 bg-[#F5F1E0] p-2 z-20">
-        <div className="flex justify-between px-12 pb-6">
+        <div className="flex justify-between px-8 pb-6">
           <motion.div
             className="flex flex-col items-center gap-2 cursor-pointer"
             onClick={() => setActiveTab("chat")}
@@ -1635,9 +1794,9 @@ export default function CoreApp() {
             animate={{ y: 0, opacity: 1, scale: 1 }}
             transition={{
               type: "spring",
-              damping: 8, // Lower damping for more bounce
+              damping: 8,
               stiffness: 100,
-              delay: 0.8, // Delay after background
+              delay: 0.8,
             }}
           >
             <motion.div
@@ -1658,7 +1817,7 @@ export default function CoreApp() {
               type: "spring",
               damping: 8,
               stiffness: 100,
-              delay: 0.9, // Slightly later than the chat icon
+              delay: 0.9,
             }}
             onClick={() => setActiveTab("home")}
           >
@@ -1684,7 +1843,29 @@ export default function CoreApp() {
               type: "spring",
               damping: 8,
               stiffness: 100,
-              delay: 0.9, // Slightly later than the chat icon
+              delay: 1.0,
+            }}
+            onClick={() => setActiveTab("shop")}
+          >
+            <motion.div
+              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.1 }}
+              className="cursor-pointer"
+            >
+              <img src="/icons/shop.png" alt="shop" className="w-14 h-14" />
+              <span className="text-xl text-center">Shop</span>
+            </motion.div>
+          </motion.div>
+
+          <motion.div
+            className="flex flex-col items-center gap-2"
+            initial={{ y: 50, opacity: 0, scale: 0.5 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            transition={{
+              type: "spring",
+              damping: 8,
+              stiffness: 100,
+              delay: 0.9,
             }}
             onClick={() => setActiveTab("tasks")}
           >
@@ -1719,15 +1900,25 @@ export default function CoreApp() {
               layoutId={`task-${selectedGoal}`}
               onClose={() => setSelectedGoal(null)}
               onMarkDone={handleMarkDone}
-              onMarkNotDone={() => {
-                setGoals(
-                  goals.map((goal) =>
-                    goal.id === selectedGoal ? { ...goal, done: false } : goal
-                  )
-                );
+              onMarkNotDone={async () => {
+                if (selectedGoal) {
+                  await db.transact([
+                    tx.tasks[selectedGoal.toString()].update({
+                      done: false,
+                    }),
+                  ]);
+                }
               }}
               onFinish={() => {
                 setIsCelebrating(true);
+                // mark as completed after a second
+                setTimeout(() => {
+                  setCompletedTaskIds((prev) => {
+                    const newSet = new Set(prev);
+                    newSet.add(selectedGoal);
+                    return newSet;
+                  });
+                }, 1000);
                 setTimeout(() => {
                   setIsCelebrating(false);
                 }, 2000);

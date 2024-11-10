@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 const APP_ID = "d8419df9-903c-4b0a-b501-534596976600";
 import Widget from "./Widget";
 const db = init({ appId: APP_ID });
+import useSound from "use-sound";
 
 import { Ubuntu } from "next/font/google";
 
@@ -1405,6 +1406,12 @@ export default function CoreApp() {
     new Set()
   );
 
+  // sound effects
+  const [playPop] = useSound("/sounds/pop.mp3");
+  const [playMoney] = useSound("/sounds/money.mp3");
+  const [playCash] = useSound("/sounds/cash.mp3");
+  const [playDoor] = useSound("/sounds/door.mp3");
+
   const signout = async () => {
     await db.auth.signOut();
   };
@@ -1744,7 +1751,13 @@ export default function CoreApp() {
                             stiffness: 400,
                             duration: 0.2,
                           }}
-                          onClick={() => setSelectedGoal(task.id)}
+                          whileTap={{
+                            scale: 0.9,
+                          }}
+                          onClick={() => {
+                            setSelectedGoal(task.id);
+                            playPop();
+                          }}
                         >
                           <div className="flex items-center gap-4">
                             {iconToImageUrl(task.icon) ? (
@@ -1789,7 +1802,10 @@ export default function CoreApp() {
         <div className="flex justify-between px-8 pb-6">
           <motion.div
             className="flex flex-col items-center gap-2 cursor-pointer"
-            onClick={() => setActiveTab("chat")}
+            onClick={() => {
+              setActiveTab("chat");
+              playPop();
+            }}
             initial={{ y: 50, opacity: 0, scale: 0.5 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             transition={{
@@ -1819,7 +1835,10 @@ export default function CoreApp() {
               stiffness: 100,
               delay: 0.9,
             }}
-            onClick={() => setActiveTab("home")}
+            onClick={() => {
+              setActiveTab("home");
+              playPop();
+            }}
           >
             <motion.div
               whileTap={{ scale: 0.95 }}
@@ -1845,7 +1864,10 @@ export default function CoreApp() {
               stiffness: 100,
               delay: 1.0,
             }}
-            onClick={() => setActiveTab("shop")}
+            onClick={() => {
+              setActiveTab("shop");
+              playPop();
+            }}
           >
             <motion.div
               whileTap={{ scale: 0.95 }}
@@ -1867,7 +1889,10 @@ export default function CoreApp() {
               stiffness: 100,
               delay: 0.9,
             }}
-            onClick={() => setActiveTab("tasks")}
+            onClick={() => {
+              setActiveTab("tasks");
+              playPop();
+            }}
           >
             <motion.div
               whileTap={{ scale: 0.95 }}

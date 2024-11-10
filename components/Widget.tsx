@@ -12,6 +12,7 @@ export default function Widget({
   isCelebrating: boolean;
   purchasedItems: string[];
 }) {
+  if (!purchasedItems) return null;
   const determineImage = () => {
     if (isCelebrating) {
       return "/character/wow.gif";

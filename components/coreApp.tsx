@@ -150,6 +150,7 @@ export function GoalExpanded({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [widgetMessage, setWidgetMessage] = useState<string>("");
   const timerDuration = getTaskTimer(task);
+  const [stretchStage, setStretchStage] = useState<string>("");
 
   // Fetch message when component mounts
   useEffect(() => {
@@ -159,6 +160,12 @@ export function GoalExpanded({
     };
     fetchMessage();
   }, [task]);
+
+  const getStretchingStage = (timeLeft: number): string => {
+    if (timeLeft > 60) return "LEFT";
+    if (timeLeft > 30) return "RIGHT";
+    return "FORWARD";
+  };
 
   const handleMarkDone = () => {
     // Get button position

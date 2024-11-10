@@ -19,7 +19,7 @@ const client = new ElevenLabsClient({
 export async function getTextToSpeech(text: string) {
   try {
     const audioStream = await client.generate({
-      voice: "Chris",
+      voice: "Gigi",
       model_id: "eleven_turbo_v2_5",
       text,
     });

@@ -124,14 +124,14 @@ function FlyingCoin({
         stiffness: 100,
         mass: 0.5,
         opacity: {
-          times: [1, 1, 0], // Stay fully visible until the end, then quickly fade
-          duration: 0.33, // Shorter duration for a quicker fade
+          times: [1, 1, 0],
+          duration: 0.33,
         },
       }}
       onAnimationComplete={onComplete}
-      className="fixed z-[100] text-2xl pointer-events-none"
+      className="fixed z-[100] pointer-events-none"
     >
-      🪙
+      <img src="/icons/coin.png" alt="coin" className="w-8 h-8" />
     </motion.div>
   );
 }
@@ -234,7 +234,7 @@ export function GoalExpanded({
       >
         <motion.div
           layoutId={layoutId}
-          className="bg-white w-full max-w-lg rounded-xl shadow-lg mb-[15vh]"
+          className="bg-white w-full max-w-lg rounded-xl shadow-lg mb-[5vh] z-50"
           transition={{
             type: "spring",
             damping: 25,
@@ -320,7 +320,11 @@ export function GoalExpanded({
                   onClick={handleMarkDone}
                 >
                   <span>Mark as done</span>
-                  <span className="text-xl">(50 🪙)</span>
+                  <span className="text-xl flex items-center gap-1">
+                    (50{" "}
+                    <img src="/icons/coin.png" alt="coin" className="w-6 h-6" />
+                    )
+                  </span>
                 </button>
               ) : (
                 <button
@@ -1404,13 +1408,18 @@ function TaskTimer({
 
         <button
           onClick={() => {
-            if (isStretching && !isRunning) {
+            if (!isRunning) {
               setIsRunning(true);
+            }
+            if (isStretching && !isRunning) {
               playStretch();
             }
             if (isRunning) {
-              stop();
               setIsRunning(false);
+            }
+
+            if (isRunning) {
+              stop();
             }
           }}
           className={`w-full py-3 rounded-lg text-lg font-semibold transition-colors ${
@@ -1906,7 +1915,7 @@ export default function CoreApp() {
       </AnimatePresence>
 
       {/* Bottom Navigation - Fixed at bottom, above content */}
-      <div className="fixed bottom-0 left-0 right-0 bg-[#F5F1E0] p-2 z-20">
+      <div className="fixed bottom-0 left-0 right-0 bg-[#F5F1E0] p-2 z-10">
         <div className="flex justify-between px-8 pb-6">
           <motion.div
             className="flex flex-col items-center gap-2 cursor-pointer"

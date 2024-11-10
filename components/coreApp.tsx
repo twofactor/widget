@@ -757,9 +757,9 @@ User: ${inputText}`;
           </div>
 
           <div className="border-t p-4">
-            <div className="flex gap-2 max-w-[85%] mx-auto">
+            <div className="flex items-center gap-2">
               <div
-                className={`flex-1 relative flex items-center bg-white rounded-full shadow-sm pl-4 ${
+                className={`flex-1 flex items-center bg-white rounded-full ${
                   isListening ? "bg-red-50" : ""
                 }`}
               >
@@ -777,12 +777,12 @@ User: ${inputText}`;
                         handleSendMessage();
                       }
                     }}
-                    className="flex-1 bg-transparent border-none outline-none px-2 py-2 text-base min-w-0"
+                    className="flex-1 bg-transparent border-none outline-none px-3 py-2 text-sm min-w-0"
                     placeholder="Message Widget..."
                   />
                 )}
                 <motion.div
-                  className={`p-2 flex items-center justify-center cursor-pointer rounded-full shrink-0 ${
+                  className={`p-2 flex items-center justify-center cursor-pointer rounded-full ${
                     isListening
                       ? "bg-red-100 animate-pulse"
                       : "hover:bg-gray-100"
@@ -792,12 +792,12 @@ User: ${inputText}`;
                   transition={{ type: "spring", damping: 10, stiffness: 100 }}
                   onClick={handleVoiceInput}
                 >
-                  <span className="text-2xl">{isListening ? "🔴" : "🎤"}</span>
+                  <span className="text-xl">{isListening ? "🔴" : "🎤"}</span>
                 </motion.div>
               </div>
               {!isListening && (
                 <motion.div
-                  className="w-12 h-12 min-w-12 min-h-12 flex items-center justify-center cursor-pointer"
+                  className="w-12 h-12 flex items-center justify-center cursor-pointer"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
                   transition={{ type: "spring", damping: 10, stiffness: 100 }}

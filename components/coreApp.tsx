@@ -413,7 +413,6 @@ function ChatScreen({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isListening, setIsListening] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  // @ts-ignore
   const recognitionRef = useRef<any>(null); // Store recognition instance
 
   // @ts-ignore
@@ -540,50 +539,96 @@ User: ${inputText}`;
   // Add this function to handle voice input
   const handleVoiceInput = async () => {
     if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
       if (mediaRecorderRef.current) {
         mediaRecorderRef.current.stop();
       }
       setIsListening(false);
       return;
     }
+    const initializeSpeechRecognition = () => {
+      if (typeof window === "undefined") return null;
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
+      const SpeechRecognition =
+        (window as any).SpeechRecognition ||
+        (window as any).webkitSpeechRecognition;
+      if (!SpeechRecognition) return null;
 
-      const audioChunks: Blob[] = [];
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = "en-US";
 
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunks.push(event.data);
+      recognition.onresult = (event: any) => {
+        const text = event.results[0][0].transcript;
+        setInputText(text);
+        setTimeout(() => handleSendMessage(), 100);
       };
 
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-        try {
-          const text = await getSpeechToText(audioBlob);
-          setInputText(text);
-          // Add this line to automatically send the message
-          setTimeout(() => handleSendMessage(), 100);
-        } catch (error) {
-          console.error("Failed to transcribe:", error);
-        }
-        stream.getTracks().forEach((track) => track.stop());
+      recognition.onend = () => {
+        setIsListening(false);
       };
 
-      mediaRecorder.start();
-      setIsListening(true);
+      return recognition;
+    };
 
-      // Stop recording after 10 seconds
-      setTimeout(() => {
-        if (mediaRecorderRef.current?.state === "recording") {
-          mediaRecorderRef.current.stop();
-          setIsListening(false);
-        }
-      }, 10000);
-    } catch (error) {
-      console.error("Error handling voice input:", error);
-      setIsListening(false);
+    // Try browser's speech recognition first
+    if (!recognitionRef.current) {
+      recognitionRef.current = initializeSpeechRecognition();
+    }
+
+    if (recognitionRef.current) {
+      // Use browser's speech recognition
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (error) {
+        console.error("Error starting speech recognition:", error);
+        setIsListening(false);
+      }
+    } else {
+      // Fallback to media recorder logic
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        });
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+
+        const audioChunks: Blob[] = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+          try {
+            const text = await getSpeechToText(audioBlob);
+            setInputText(text);
+            setTimeout(() => handleSendMessage(), 100);
+          } catch (error) {
+            console.error("Failed to transcribe:", error);
+          }
+          stream.getTracks().forEach((track) => track.stop());
+        };
+
+        mediaRecorder.start();
+        setIsListening(true);
+
+        // Stop recording after 10 seconds
+        setTimeout(() => {
+          if (mediaRecorderRef.current?.state === "recording") {
+            mediaRecorderRef.current.stop();
+            setIsListening(false);
+          }
+        }, 10000);
+      } catch (error) {
+        console.error("Error handling voice input:", error);
+        setIsListening(false);
+      }
     }
   };
 
@@ -1261,6 +1306,7 @@ const getWidgetMessage = async (task: Task): Promise<string> => {
 
 // Add this helper function to determine timer duration
 const getTaskTimer = (task: Task): number | null => {
+  if (!task) return null;
   const title = task.title.toLowerCase();
   if (title.includes("brush") || title.includes("teeth")) {
     return 120; // 2 minutes for brushing teeth

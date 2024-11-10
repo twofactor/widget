@@ -1811,7 +1811,13 @@ export default function CoreApp() {
         )}
         {activeTab === "home" && !isShopOpen && !isSettingsOpen && (
           <>
-            <CoinCounter coins={userData?.coins || 0} onClick={() => {}} />
+            <CoinCounter
+              coins={userData?.coins || 0}
+              onClick={() => {
+                // setIsShopOpen(true);
+                setActiveTab("shop");
+              }}
+            />
 
             {/* Add settings button */}
             <motion.button

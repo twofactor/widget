@@ -152,7 +152,7 @@ export function GoalExpanded({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [widgetMessage, setWidgetMessage] = useState<string>("");
   const timerDuration = getTaskTimer(task);
-  const [, { stop }] = useSound("/sounds/stretch.mp3");
+  const [playStretch, { stop }] = useSound("/sounds/stretch.mp3");
 
   // Fetch message when component mounts
   useEffect(() => {
@@ -315,6 +315,8 @@ export function GoalExpanded({
                     // }
                   }}
                   isStretching={task.title.toLowerCase().includes("stretch")}
+                  playStretch={playStretch}
+                  stopStretch={stop}
                 />
               )}
 
@@ -323,7 +325,10 @@ export function GoalExpanded({
                 <button
                   ref={buttonRef}
                   className="w-full bg-green-600 px-4 py-2 rounded-lg hover:bg-green-700 text-white text-lg font-semibold flex items-center justify-center gap-2"
-                  onClick={handleMarkDone}
+                  onClick={() => {
+                    handleMarkDone();
+                    stop();
+                  }}
                 >
                   <span>Mark as done</span>
                   <span className="text-xl flex items-center gap-1">
@@ -1361,15 +1366,18 @@ function TaskTimer({
   seconds,
   onComplete,
   isStretching = false,
+  playStretch,
+  stopStretch,
 }: {
   seconds: number;
   onComplete: () => void;
   isStretching?: boolean;
+  playStretch: () => void;
+  stopStretch: () => void;
 }) {
   const [timeLeft, setTimeLeft] = useState(seconds);
   const [isRunning, setIsRunning] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [playStretch, { stop }] = useSound("/sounds/stretch.mp3");
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -1425,7 +1433,7 @@ function TaskTimer({
             }
 
             if (isRunning) {
-              stop();
+              stopStretch();
             }
           }}
           className={`w-full py-3 rounded-lg text-lg font-semibold transition-colors ${

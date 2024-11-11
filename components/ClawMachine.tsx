@@ -394,7 +394,7 @@ export function ClawMachine({ onClose, onWin }: ClawMachineProps) {
                   }
                   onClose();
                 }}
-                className="mt-6 px-6 py-3 bg-blue-500 text-white rounded-lg font-bold shadow-lg hover:bg-blue-600 transition-colors"
+                className="mt-6 px-6 py-3 bg-yellow-500 text-white rounded-lg font-bold shadow-lg hover:bg-blue-600 transition-colors"
               >
                 Claim Plushie!
               </motion.button>

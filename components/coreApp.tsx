@@ -1495,11 +1495,15 @@ function SettingsScreen({
   onClose,
   email,
   onSignOut,
+  onResetItems,
 }: {
   onClose: () => void;
   email: string;
   onSignOut: () => void;
+  onResetItems: () => void;
 }) {
+  const [showConfirmReset, setShowConfirmReset] = useState(false);
+
   return (
     <motion.div
       initial={{ y: "100%" }}
@@ -1530,6 +1534,14 @@ function SettingsScreen({
                 <div className="text-lg">{email}</div>
               </div>
 
+              {/* Add reset button */}
+              <button
+                onClick={() => setShowConfirmReset(true)}
+                className="w-full bg-yellow-500 text-white py-3 rounded-lg hover:bg-yellow-600 transition-colors mb-4"
+              >
+                Reset Room Items
+              </button>
+
               <button
                 onClick={onSignOut}
                 className="w-full bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 transition-colors"
@@ -1540,6 +1552,40 @@ function SettingsScreen({
           </div>
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmReset && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-xl p-6 max-w-sm w-full"
+          >
+            <h3 className="text-xl font-bold mb-4">Reset Room Items?</h3>
+            <p className="text-gray-600 mb-6">
+              This will remove all items from your room. This action cannot be
+              undone.
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowConfirmReset(false)}
+                className="flex-1 py-2 px-4 rounded-lg bg-gray-100 hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  onResetItems();
+                  setShowConfirmReset(false);
+                }}
+                className="flex-1 py-2 px-4 rounded-lg bg-red-500 text-white hover:bg-red-600"
+              >
+                Reset
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </motion.div>
   );
 }
@@ -1831,6 +1877,15 @@ export default function CoreApp() {
     ]);
   };
 
+  const handleResetItems = () => {
+    if (!user?.id) return;
+    db.transact([
+      tx.userData[user.id].update({
+        purchasedItems: [], // Reset to empty array
+      }),
+    ]);
+  };
+
   return (
     <div className="h-screen flex flex-col relative overflow-hidden bg-[#F5F1E0]">
       <AnimatePresence>
@@ -1848,6 +1903,7 @@ export default function CoreApp() {
             onClose={() => setIsSettingsOpen(false)}
             email={user?.email || ""}
             onSignOut={signout}
+            onResetItems={handleResetItems}
           />
         )}
 

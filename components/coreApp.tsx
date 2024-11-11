@@ -18,6 +18,7 @@ import { getTextToSpeech } from "@/actions/elevenlabs";
 import { CurvedBackground } from "./CurvedBackground";
 import { CurvedBackground2 } from "./CurvedBackground2";
 import { getSpeechToText } from "@/actions/openai";
+import { ClawMachine } from "./ClawMachine";
 
 const iconToImageUrl = (icon: string): string | null => {
   // switch (icon) {
@@ -1118,12 +1119,13 @@ interface ShopItem {
   description: string;
   price: number;
   image: string;
-  type: "furniture" | "decoration" | "tech";
+  type: "furniture" | "decoration" | "tech" | "game";
   position?: {
     top?: string;
     left?: string;
     right?: string;
   };
+  repeatable: boolean;
 }
 
 const SHOP_ITEMS: ShopItem[] = [
@@ -1138,6 +1140,7 @@ const SHOP_ITEMS: ShopItem[] = [
       left: "5%",
       top: "30%",
     },
+    repeatable: false,
   },
   {
     id: "mattress",
@@ -1150,6 +1153,7 @@ const SHOP_ITEMS: ShopItem[] = [
       left: "5%",
       top: "68%",
     },
+    repeatable: false,
   },
   {
     id: "desk",
@@ -1162,6 +1166,7 @@ const SHOP_ITEMS: ShopItem[] = [
       right: "5%",
       top: "40%",
     },
+    repeatable: false,
   },
   {
     id: "computer",
@@ -1170,6 +1175,7 @@ const SHOP_ITEMS: ShopItem[] = [
     price: 500,
     image: "/stuff/computer.png",
     type: "tech",
+    repeatable: false,
   },
   {
     id: "boba",
@@ -1178,6 +1184,7 @@ const SHOP_ITEMS: ShopItem[] = [
     price: 50,
     image: "/stuff/boba.png",
     type: "decoration",
+    repeatable: false,
   },
   {
     id: "poster",
@@ -1190,6 +1197,16 @@ const SHOP_ITEMS: ShopItem[] = [
       top: "15%",
       right: "60%",
     },
+    repeatable: false,
+  },
+  {
+    id: "clawmachine",
+    name: "Play Claw Machine",
+    description: "Try your luck at winning cute plushies! 🎮",
+    price: 50,
+    image: "/plushies/claw_closed.png",
+    type: "game",
+    repeatable: true,
   },
 ];
 
@@ -1198,11 +1215,13 @@ function CoinsScreen({
   coins,
   purchasedItems,
   onPurchaseItem,
+  onPlayClawMachine,
 }: {
   onClose: () => void;
   coins: number;
   purchasedItems: PurchasedItem[];
   onPurchaseItem: (item: ShopItem) => void;
+  onPlayClawMachine: () => void;
 }) {
   const [playDoor] = useSound("/sounds/door.mp3");
   return (
@@ -1240,13 +1259,13 @@ function CoinsScreen({
           <div className="flex-1 overflow-y-auto">
             <div className="grid grid-cols-2 gap-4">
               {SHOP_ITEMS.map((item) => {
-                const isOwned = purchasedItems.some(
-                  (purchased) => purchased.id === item.id
-                );
+                const isOwned =
+                  !item.repeatable &&
+                  purchasedItems.some((purchased) => purchased.id === item.id);
 
                 return (
                   <motion.div
-                    key={item.id}
+                    key={`shop-item-${item.id}`}
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     whileHover={{ scale: 1.05 }}
@@ -1277,8 +1296,16 @@ function CoinsScreen({
                             ? "bg-green-500 hover:bg-green-600"
                             : "bg-gray-300"
                         } text-white transition-colors`}
-                        disabled={isOwned || coins < item.price}
-                        onClick={() => onPurchaseItem(item)}
+                        disabled={
+                          (!item.repeatable && isOwned) || coins < item.price
+                        }
+                        onClick={() => {
+                          if (item.id === "clawmachine") {
+                            onPlayClawMachine();
+                          } else {
+                            onPurchaseItem(item);
+                          }
+                        }}
                       >
                         {isOwned ? (
                           "Owned"
@@ -1776,9 +1803,29 @@ export default function CoreApp() {
     ]);
   };
 
+  const [isClawMachineOpen, setIsClawMachineOpen] = useState(false);
+
+  const handlePlayClawMachine = async () => {
+    if (!userData || !user?.id) return;
+    if (userData.coins >= 50) {
+      await db.transact([
+        tx.userData[user.id].update({
+          coins: userData.coins - 50,
+        }),
+      ]);
+      setIsClawMachineOpen(true);
+      setActiveTab("home");
+    }
+  };
+
   return (
     <div className="h-screen flex flex-col relative overflow-hidden bg-[#F5F1E0]">
       <AnimatePresence>
+        {/* Add ClawMachine component */}
+        {isClawMachineOpen && (
+          <ClawMachine onClose={() => setIsClawMachineOpen(false)} />
+        )}
+
         {/* Add settings screen */}
         {isSettingsOpen && (
           <SettingsScreen
@@ -1811,6 +1858,7 @@ export default function CoreApp() {
             coins={userData?.coins || 0}
             purchasedItems={userData?.purchasedItems || []}
             onPurchaseItem={handlePurchaseItem}
+            onPlayClawMachine={handlePlayClawMachine}
           />
         )}
         {activeTab === "home" && !isShopOpen && !isSettingsOpen && (

@@ -65,9 +65,7 @@ export default function Widget({
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
       />
-
       {/* Eames Chair */}
-
       <motion.div
         className="absolute left-[5%] top-[30%]"
         style={{ zIndex: 1 }}
@@ -90,9 +88,7 @@ export default function Widget({
           />
         )}
       </motion.div>
-
       {/* Mattress/Mat */}
-
       <motion.div
         className="absolute left-[5%] top-[68%]"
         style={{ zIndex: 1 }}
@@ -111,9 +107,7 @@ export default function Widget({
           <img src="/stuff/trash.png" alt="Trash" className="w-12" />
         )}
       </motion.div>
-
       {/* Desk with Computer */}
-
       <motion.div
         className="absolute right-[5%] top-[40%]"
         style={{ zIndex: 1 }}
@@ -155,9 +149,58 @@ export default function Widget({
           />
         )}
       </motion.div>
-
+      {/* Plushies */} {/* // plushies */}
+      <motion.div
+        className="absolute right-[5%] top-[40%]"
+        style={{ zIndex: 1 }}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{
+          type: "spring",
+          damping: 8,
+          stiffness: 100,
+          delay: 0.4,
+        }}
+      >
+        <div className="flex gap-0 z-50">
+          {purchasedItems.includes("Dog") && (
+            <img
+              src="/plushies/dog.png"
+              alt="Dog"
+              className="w-12 mt-24 mr-0"
+            />
+          )}
+          {purchasedItems.includes("Cat") && (
+            <img
+              src="/plushies/cat.png"
+              alt="Cat"
+              className="w-12 mt-24 mr-0"
+            />
+          )}
+          {purchasedItems.includes("Hippo") && (
+            <img
+              src="/plushies/hippo.png"
+              alt="Hippo"
+              className="w-12 mt-24 mr-0"
+            />
+          )}
+          {purchasedItems.includes("Frog") && (
+            <img
+              src="/plushies/frog.png"
+              alt="Frog"
+              className="w-12 mt-24 mr-0"
+            />
+          )}
+          {purchasedItems.includes("Giraffe") && (
+            <img
+              src="/plushies/giraffe.png"
+              alt="Giraffe"
+              className="w-12 mt-24 mr-0"
+            />
+          )}
+        </div>
+      </motion.div>
       {/* poster Logo on Wall */}
-
       <motion.div
         className="absolute top-[15%] right-[60%]"
         style={{ zIndex: 1 }}

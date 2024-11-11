@@ -6,17 +6,20 @@ import useSound from "use-sound";
 
 interface ClawMachineProps {
   onClose: () => void;
+  onWin: (item: string) => void;
 }
 
 interface Item {
   id: number;
+  name: string;
   image: string;
   position: { x: number; y: number };
   isGrabbed?: boolean;
 }
 
-export function ClawMachine({ onClose }: ClawMachineProps) {
+export function ClawMachine({ onClose, onWin }: ClawMachineProps) {
   const [playClawTheme] = useSound("/sounds/clawmachinetheme.mp3");
+  const [winningItem, setWinningItem] = useState<string | null>(null);
   // Initial items in a pile formation
 
   useEffect(() => {
@@ -27,26 +30,31 @@ export function ClawMachine({ onClose }: ClawMachineProps) {
   const [items, setItems] = useState<Item[]>([
     {
       id: 1,
+      name: "Cat",
       image: "/plushies/cat.png",
       position: { x: 20, y: 370 },
     },
     {
       id: 2,
+      name: "Hippo",
       image: "/plushies/hippo.png",
       position: { x: 130, y: 320 },
     },
     {
       id: 3,
+      name: "Frog",
       image: "/plushies/frog.png",
       position: { x: 150, y: 370 },
     },
     {
       id: 4,
+      name: "Dog",
       image: "/plushies/dog.png",
       position: { x: 80, y: 370 },
     },
     {
       id: 5,
+      name: "Giraffe",
       image: "/plushies/giraffe.png",
       position: { x: 200, y: 370 },
     },
@@ -381,6 +389,9 @@ export function ClawMachine({ onClose }: ClawMachineProps) {
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
                   setSuccessPopup(null);
+                  if (successPopup.name) {
+                    onWin(successPopup.name);
+                  }
                   onClose();
                 }}
                 className="mt-6 px-6 py-3 bg-blue-500 text-white rounded-lg font-bold shadow-lg hover:bg-blue-600 transition-colors"

@@ -1818,12 +1818,28 @@ export default function CoreApp() {
     }
   };
 
+  const handleClawMachineWin = (item: string) => {
+    // add item to purchased items
+    const newItem = {
+      id: item,
+      position: 0,
+    };
+    db.transact([
+      tx.userData[user?.id || ""].update({
+        purchasedItems: [...(userData?.purchasedItems || []), newItem],
+      }),
+    ]);
+  };
+
   return (
     <div className="h-screen flex flex-col relative overflow-hidden bg-[#F5F1E0]">
       <AnimatePresence>
         {/* Add ClawMachine component */}
         {isClawMachineOpen && (
-          <ClawMachine onClose={() => setIsClawMachineOpen(false)} />
+          <ClawMachine
+            onClose={() => setIsClawMachineOpen(false)}
+            onWin={handleClawMachineWin}
+          />
         )}
 
         {/* Add settings screen */}

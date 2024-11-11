@@ -1877,128 +1877,131 @@ export default function CoreApp() {
             onPlayClawMachine={handlePlayClawMachine}
           />
         )}
-        {activeTab === "home" && !isShopOpen && !isSettingsOpen && (
-          <>
-            <CoinCounter
-              coins={userData?.coins || 0}
-              onClick={() => {
-                // setIsShopOpen(true);
-                setActiveTab("shop");
-              }}
-            />
-
-            {/* Add settings button */}
-            <motion.button
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="fixed top-4 right-4 z-50 p-2 bg-white rounded-full shadow-lg"
-              onClick={() => setIsSettingsOpen(true)}
-            >
-              <span className="text-xl">⚙️</span>
-            </motion.button>
-
-            <CurvedBackground />
-            {/* Room Scene - Fixed at top */}
-            <div className="flex-none h-[40vh] relative z-10">
-              <Widget
-                taskType={taskType}
-                isCelebrating={isCelebrating}
-                purchasedItems={userData?.purchasedItems.map(
-                  (item: any) => item.id
-                )}
-                stretchStage={stretchStage}
+        {activeTab === "home" &&
+          !isShopOpen &&
+          !isSettingsOpen &&
+          !isClawMachineOpen && (
+            <>
+              <CoinCounter
+                coins={userData?.coins || 0}
+                onClick={() => {
+                  // setIsShopOpen(true);
+                  setActiveTab("shop");
+                }}
               />
-            </div>
-            {/* Scrollable Tasks List */}
-            <div className="flex-1 overflow-y-auto pb-28 relative z-10">
-              {filteredGoals.length === 0 ? (
-                <EmptyState onCreateTask={() => setActiveTab("tasks")} />
-              ) : (
-                <div className="flex flex-col gap-4 p-4">
-                  <AnimatePresence mode="popLayout">
-                    {filteredGoals.map((task, index) => (
-                      <motion.div
-                        key={task.id}
-                        initial={{
-                          scale: 0.3,
-                          opacity: 0,
-                          x: -100,
-                        }}
-                        animate={{
-                          scale: 1,
-                          opacity: 1,
-                          x: 0,
-                        }}
-                        exit={{
-                          scale: 0.3,
-                          opacity: 0,
-                          x: 100,
-                          transition: {
-                            duration: 0.2,
-                            ease: "easeOut",
-                          },
-                        }}
-                        transition={{
-                          type: "spring",
-                          damping: 20,
-                          stiffness: 300,
-                          delay: index * 0.05, // Reduced delay for quicker rearrangement
-                        }}
-                        layout // Add this to enable automatic layout animations
-                      >
+
+              {/* Add settings button */}
+              <motion.button
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="fixed top-4 right-4 z-50 p-2 bg-white rounded-full shadow-lg"
+                onClick={() => setIsSettingsOpen(true)}
+              >
+                <span className="text-xl">⚙️</span>
+              </motion.button>
+
+              <CurvedBackground />
+              {/* Room Scene - Fixed at top */}
+              <div className="flex-none h-[40vh] relative z-10">
+                <Widget
+                  taskType={taskType}
+                  isCelebrating={isCelebrating}
+                  purchasedItems={userData?.purchasedItems.map(
+                    (item: any) => item.id
+                  )}
+                  stretchStage={stretchStage}
+                />
+              </div>
+              {/* Scrollable Tasks List */}
+              <div className="flex-1 overflow-y-auto pb-28 relative z-10">
+                {filteredGoals.length === 0 ? (
+                  <EmptyState onCreateTask={() => setActiveTab("tasks")} />
+                ) : (
+                  <div className="flex flex-col gap-4 p-4">
+                    <AnimatePresence mode="popLayout">
+                      {filteredGoals.map((task, index) => (
                         <motion.div
-                          layoutId={`task-${task.id}`}
-                          className="cursor-pointer flex items-center justify-between bg-white rounded-xl p-4 shadow-sm"
+                          key={task.id}
+                          initial={{
+                            scale: 0.3,
+                            opacity: 0,
+                            x: -100,
+                          }}
+                          animate={{
+                            scale: 1,
+                            opacity: 1,
+                            x: 0,
+                          }}
+                          exit={{
+                            scale: 0.3,
+                            opacity: 0,
+                            x: 100,
+                            transition: {
+                              duration: 0.2,
+                              ease: "easeOut",
+                            },
+                          }}
                           transition={{
                             type: "spring",
-                            damping: 25,
-                            stiffness: 400,
-                            duration: 0.2,
+                            damping: 20,
+                            stiffness: 300,
+                            delay: index * 0.05, // Reduced delay for quicker rearrangement
                           }}
-                          whileTap={{
-                            scale: 0.9,
-                          }}
-                          onClick={() => {
-                            setSelectedGoal(task.id);
-                            playPop();
-                          }}
+                          layout // Add this to enable automatic layout animations
                         >
-                          <div className="flex items-center gap-4">
-                            {iconToImageUrl(task.icon) ? (
-                              <img
-                                src={iconToImageUrl(task.icon) || ""}
-                                alt={task.icon}
-                                className="w-10 h-10"
-                              />
-                            ) : (
-                              <div
-                                className={`w-10 h-10 flex items-center justify-center text-4xl`}
+                          <motion.div
+                            layoutId={`task-${task.id}`}
+                            className="cursor-pointer flex items-center justify-between bg-white rounded-xl p-4 shadow-sm"
+                            transition={{
+                              type: "spring",
+                              damping: 25,
+                              stiffness: 400,
+                              duration: 0.2,
+                            }}
+                            whileTap={{
+                              scale: 0.9,
+                            }}
+                            onClick={() => {
+                              setSelectedGoal(task.id);
+                              playPop();
+                            }}
+                          >
+                            <div className="flex items-center gap-4">
+                              {iconToImageUrl(task.icon) ? (
+                                <img
+                                  src={iconToImageUrl(task.icon) || ""}
+                                  alt={task.icon}
+                                  className="w-10 h-10"
+                                />
+                              ) : (
+                                <div
+                                  className={`w-10 h-10 flex items-center justify-center text-4xl`}
+                                >
+                                  {task.icon}
+                                </div>
+                              )}
+                              <span className="text-xl">{task.title}</span>
+                            </div>
+                            <div className="check-button-base p-2 px-4">
+                              <span
+                                className={`${
+                                  task.done
+                                    ? "text-green-500 opacity-100"
+                                    : "text-gray-500 opacity-50"
+                                } font-extrabold text-xl`}
                               >
-                                {task.icon}
-                              </div>
-                            )}
-                            <span className="text-xl">{task.title}</span>
-                          </div>
-                          <div className="check-button-base p-2 px-4">
-                            <span
-                              className={`${
-                                task.done
-                                  ? "text-green-500 opacity-100"
-                                  : "text-gray-500 opacity-50"
-                              } font-extrabold text-xl`}
-                            >
-                              ✓
-                            </span>
-                          </div>
+                                ✓
+                              </span>
+                            </div>
+                          </motion.div>
                         </motion.div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              )}
-            </div>
-          </>
-        )}
+                      ))}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
       </AnimatePresence>
 
       {/* Bottom Navigation - Fixed at bottom, above content */}

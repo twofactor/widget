@@ -29,31 +29,31 @@ export function ClawMachine({ onClose, onWin }: ClawMachineProps) {
 
   const [items, setItems] = useState<Item[]>([
     {
-      id: 1,
+      id: 12312,
       name: "Cat",
       image: "/plushies/cat.png",
       position: { x: 20, y: 370 },
     },
     {
-      id: 2,
+      id: 22323,
       name: "Hippo",
       image: "/plushies/hippo.png",
       position: { x: 130, y: 320 },
     },
     {
-      id: 3,
+      id: 321312,
       name: "Frog",
       image: "/plushies/frog.png",
       position: { x: 150, y: 370 },
     },
     {
-      id: 4,
+      id: 44123421,
       name: "Dog",
       image: "/plushies/dog.png",
       position: { x: 80, y: 370 },
     },
     {
-      id: 5,
+      id: 512312,
       name: "Giraffe",
       image: "/plushies/giraffe.png",
       position: { x: 200, y: 370 },
